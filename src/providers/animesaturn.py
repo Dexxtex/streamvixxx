@@ -733,20 +733,7 @@ def main_cli():
         stream_url = extract_mp4_url(watch_url, session=SESSION) if watch_url else None
         stremio_stream = None
         if stream_url:
-            if stream_url.endswith('.m3u8'):
-                mfp_proxy_url = getattr(args, "mfp_proxy_url", None)
-                mfp_proxy_password = getattr(args, "mfp_proxy_password", None)
-                if mfp_proxy_url:
-                    mfp_url_normalized = mfp_proxy_url.replace('https://','').replace('http://','')
-                    if mfp_url_normalized.endswith('/'):
-                        mfp_url_normalized = mfp_url_normalized[:-1]
-                    password_param = f"&api_password={mfp_proxy_password}" if mfp_proxy_password else ""
-                    proxy_url = f"https://{mfp_url_normalized}/proxy/hls/manifest.m3u8?d={stream_url}{password_param}"
-                    stremio_stream = {"url": proxy_url, "headers": {"Referer": watch_url, "User-Agent": USER_AGENT}}
-                else:
-                    stremio_stream = {"url": stream_url, "headers": {"Referer": watch_url, "User-Agent": USER_AGENT}}
-            else:
-                stremio_stream = {"url": stream_url, "headers": {"Referer": watch_url, "User-Agent": USER_AGENT}}
+            stremio_stream = {"url": stream_url, "headers": {"Referer": watch_url, "User-Agent": USER_AGENT}}
         print(json.dumps(stremio_stream if stremio_stream else {"url": stream_url}, indent=2))
         return
 
