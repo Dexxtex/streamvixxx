@@ -612,47 +612,31 @@ export class AnimeWorldProvider {
     }
 
     if (!skipExtraNormalization) {
-      try {
-        const normSlugKey = normalized.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-        const wantsRewrite = /rewrite/i.test(normalized);
-        if (!wantsRewrite) {
-          const allowedSuffixes = ['-ita', '-subita', '-sub-ita', '-cr-ita', '-ita-cr'];
-          const beforeCount = versions.length;
-          const filtered = versions.filter(v => {
-            const raw = (v.slug || v.name || '').toLowerCase();
-            const basePart = raw.split('.')[0];
-            const cleaned = basePart.replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-            if (/rewrite\b/.test(cleaned)) return false;
-            if (cleaned === normSlugKey) return true;
-            return allowedSuffixes.some(suf => cleaned === normSlugKey + suf);
-          });
-          console.log(`[AnimeWorld] Strict base filter applied (${normSlugKey}) from ${beforeCount} -> ${filtered.length}`);
-          if (!filtered.length) {
-            console.log('[AnimeWorld] Strict filter produced 0 results, NOT restoring broad matches (no full title match).');
-            const fallbackDate = (this as any)._lastKitsuStartDate as string | undefined;
-            if (fallbackDate) {
-              try {
-                console.log('[AnimeWorld] Invoking fallbackFilterYearSearch AFTER strict filter zero-match, date=', fallbackDate);
-                const fb = await this.fallbackFilterYearSearch(normalized, fallbackDate, isMovie, episodeNumber, seasonNumber);
-                if (fb.streams.length) {
-                  return fb;
-                }
-                console.log('[AnimeWorld] fallbackFilterYearSearch produced 0 streams after strict filter.');
-              } catch (err) {
-                console.warn('[AnimeWorld] fallbackFilterYearSearch post-strict error:', err);
-              }
-            }
-            return { streams: [] };
-          }
-          versions = filtered;
-        } else {
-          console.log('[AnimeWorld] Rewrite detected in normalized title, keeping rewrite variants alongside base');
-        }
-      } catch (e) {
-        console.warn('[AnimeWorld] Strict base slug filter error (ignored):', e);
-      }
+  try {
+    const norm = (s: string) => s.toLowerCase().replace(/s+/g, ' ').trim();
+    const baseNorm = norm(normalized);
+    
+    const beforeCount = versions.length;
+    const filtered = versions.filter(v => {
+      const name = norm(v.name || v.slug || '');
+      // Rimuovi marcatori lingua per confronto pulito
+      const cleanName = name.replace(/(ita)|(cr)|(sub)/gi, '').trim();
+      return cleanName.includes(baseNorm);
+    });
+    
+    console.log(`[AnimeWorld] Flexible filter: "${baseNorm}" from ${beforeCount} -> ${filtered.length}`);
+    
+    if (filtered.length > 0) {
+      versions = filtered;
     } else {
-      console.log('[AnimeWorld][ExactMap] Skip strict base slug filter (exact map enforced).');
+      console.log('[AnimeWorld] Filter 0 results, keeping all versions');
+      // Mantieni versioni originali invece di fallback
+    }
+  } catch (e) {
+    console.warn('[AnimeWorld] Filter error:', e);
+  }
+} else {
+  console.log('[AnimeWorld][ExactMap] Skip strict base slug filter (exact map enforced).');
     }
 
     const rank = (v: AnimeWorldResult & { language_type?: string }) => {
