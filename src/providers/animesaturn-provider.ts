@@ -17,7 +17,7 @@ async function invokePythonScraper(args: string[], mfpConfig?: { mfpUrl?: string
     const mfpProxyPassword = mfpConfig?.mfpPassword || process.env.MFP_PROXY_PASSWORD || process.env.MFP_PSW || '';
 
     // Aggiungi gli argomenti proxy MFP se presenti
-    if (args[0] === 'get_stream' && mfpProxyUrl && mfpProxyPassword) {
+    if (mfpProxyUrl && mfpProxyPassword) {
         args.push('--mfp-proxy-url', mfpProxyUrl);
         args.push('--mfp-proxy-password', mfpProxyPassword);
     }
