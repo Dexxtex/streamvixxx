@@ -215,7 +215,7 @@ interface AnimeUnityStreamData {
 function getUnityBaseUrl(): string {
   const configured = getProviderUrl('animeunity', ['ANIMEUNITY_BASE_URL', 'AU_BASE_URL']);
   if (configured) return configured.replace(/\/+$/, '');
-  const host = getDomain('animeunity') || 'animeunity.so';
+  const host = (getDomain('animeunity') || 'animeunity.so').replace(/^www\./, '');
   return `https://www.${host}`.replace(/\/+$/, '');
 }
 
